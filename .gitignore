@@ -1,5 +1,5 @@
 package-lock.json
 .vscode
-.env*
+.env
 yarn.lock
 node_modules

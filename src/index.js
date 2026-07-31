@@ -1,6 +1,7 @@
 const express = require('express')
 const helmet = require('helmet')
 const session = require('cookie-session')
+const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const dotenv = require('dotenv')
 
@@ -8,7 +9,7 @@ dotenv.config()
 
 const colors = require('colors')
 
-globalThis.logging = {
+globalThis.logger = {
   info: (message = '', info = '') => {
     const date = new Date().toISOString()
 
@@ -48,8 +49,6 @@ app.use(
   })
 )
 
-app.disable('x-powered-by') // reduce fingerprint by docs express
-
 const expiryDate = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
 app.use(
   session({
@@ -65,13 +64,17 @@ app.use(
   })
 )
 
+app.use(cookieParser())
+
+app.disable('x-powered-by') // reduce fingerprint by docs express
+
 const redis = require('./redis')
 const { RateLimiterRedis } = require('rate-limiter-flexible')
 
 const rateLimiterRedis = new RateLimiterRedis({
   storeClient: redis,
-  points: 10,
-  duration: 1,
+  points: 10, // max 10 requests
+  duration: 60, // 60s
 })
 
 const rateLimiterMiddleware = (req, res, next) => {
@@ -91,12 +94,18 @@ app.use((req, res, next) => {
   const date = new Date()
 
   req.on('end', () => {
-    logging.info(
+    logger.info(
       `URL: ${req.originalUrl} | METHOD: ${req.method} | STATUS: ${res.statusCode} | TIME: ${new Date() - date}ms`
     )
   })
 
-  res.returnRes = (data, stt) => {
+  req.redisInstance = redis
+
+  res.returnJson = (stt, message, data) => {
+    return res.status(stt).json({ message, data })
+  }
+
+  res.returnRes = (stt, data) => {
     return res.status(stt).send(data)
   }
 
@@ -118,26 +127,26 @@ app.use((err, req, res, next) => {
 })
 
 const server = app.listen(process.env.PORT || 4000, () => {
-  logging.info('Initializing project 3... 2... 1...')
+  logger.info('Initializing project 3... 2... 1...')
   console.log(`
-    █████╗ ██████╗ ██╗    ██████╗ ██████╗  ██████╗      ██╗███████╗ ██████╗████████╗███████╗
-   ██╔══██╗██╔══██╗██║    ██╔══██╗██╔══██╗██╔═══██╗     ██║██╔════╝██╔════╝╚══██╔══╝██╔════╝
-   ███████║██████╔╝██║    ██████╔╝██████╔╝██║   ██║     ██║█████╗  ██║        ██║   ███████╗
-   ██╔══██║██╔═══╝ ██║    ██╔═══╝ ██╔══██╗██║   ██║██   ██║██╔══╝  ██║        ██║   ╚════██║
-   ██║  ██║██║     ██║    ██║     ██║  ██║╚██████╔╝╚█████╔╝███████╗╚██████╗   ██║   ███████║
-   ╚═╝  ╚═╝╚═╝     ╚═╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚════╝ ╚══════╝ ╚═════╝   ╚═╝   ╚══════╝
+  █████╗ ██████╗ ██╗    ██████╗ ██████╗  ██████╗      ██╗███████╗ ██████╗████████╗███████╗
+ ██╔══██╗██╔══██╗██║    ██╔══██╗██╔══██╗██╔═══██╗     ██║██╔════╝██╔════╝╚══██╔══╝██╔════╝
+ ███████║██████╔╝██║    ██████╔╝██████╔╝██║   ██║     ██║█████╗  ██║        ██║   ███████╗
+ ██╔══██║██╔═══╝ ██║    ██╔═══╝ ██╔══██╗██║   ██║██   ██║██╔══╝  ██║        ██║   ╚════██║
+ ██║  ██║██║     ██║    ██║     ██║  ██║╚██████╔╝╚█████╔╝███████╗╚██████╗   ██║   ███████║
+ ╚═╝  ╚═╝╚═╝     ╚═╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚════╝ ╚══════╝ ╚═════╝   ╚═╝   ╚══════╝
 
-                          public project of api restfull
+                            public project of api REST
 
-──────────────────────────────────────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────────────────
 
-API project to centralize routes, middleware, routines, queues,
-and access to relational and non-relational databases.
+  API project to centralize routes, middleware, routines, queues,
+  and access to relational and non-relational databases.
 
-──────────────────────────────────────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────────────────
     `)
-  logging.info(`🚀 Server running on http://localhost:${process.env.PORT || 4000}`)
-  logging.warn(
+  logger.info(`🚀 Server running on http://localhost:${process.env.PORT || 4000}`)
+  logger.warn(
     'ATENÇÃO: Tudo e qualquer conteúdo foi retirado de documentações reais: express, sequelize, node, prisma, ioredis, helmet, cookies, rate limit...'
   )
 })

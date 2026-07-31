@@ -8,27 +8,27 @@ const redisClient = new Redis({
 })
 
 redisClient.on('connect', () => {
-  logging.info('REDIS: Conexão TCP estabelecida.')
+  logger.info('REDIS: Conexão TCP estabelecida.')
 })
 
 redisClient.on('ready', () => {
-  logging.success('REDIS: Pronto para receber comandos.')
+  logger.success('REDIS: Pronto para receber comandos.')
 })
 
 redisClient.on('reconnecting', (delay) => {
-  logging.warn(`REDIS: Reconectando em ${delay}ms...`)
+  logger.warn(`REDIS: Reconectando em ${delay}ms...`)
 })
 
 redisClient.on('close', () => {
-  logging.warn('REDIS: Conexão encerrada.')
+  logger.warn('REDIS: Conexão encerrada.')
 })
 
 redisClient.on('end', () => {
-  logging.error('REDIS: Cliente encerrado. Não haverá novas tentativas de reconexão.')
+  logger.error('REDIS: Cliente encerrado. Não haverá novas tentativas de reconexão.')
 })
 
 redisClient.on('error', (err) => {
-  logging.error('REDIS:', err)
+  logger.error('REDIS:', err)
 })
 
 module.exports = redisClient

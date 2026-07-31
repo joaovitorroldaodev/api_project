@@ -1,13 +1,13 @@
 {
   "name": "api_projects",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "v:pat": "npm version patch",
+    "v:pat": "git version patch",
     "v:min": "npm version minor",
     "v:maj": "npm version major",
     "format": "npx prettier --write ."
@@ -18,6 +18,7 @@
   "type": "commonjs",
   "dependencies": {
     "colors": "^1.4.0",
+    "cookie-parser": "^1.4.7",
     "cookie-session": "^2.1.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
